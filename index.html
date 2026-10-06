@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="SEVI: Safe Evidential Real-World Reinforcement Learning — reliability-aware safety intervention for real-world robot learning." />
+  <meta property="og:title" content="SEVI: Safe Evidential Real-World Reinforcement Learning" />
+  <meta property="og:description" content="Reliability-aware safety intervention for real-world reinforcement learning." />
+  <meta property="og:image" content="static/images/teaser_poster.jpg" />
+  <meta property="og:type" content="website" />
+  <title>SEVI | Safe Evidential Real-World Reinforcement Learning</title>
+  <link rel="icon" href="static/images/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="static/css/style.css" />
+</head>
+<body>
+  <main>
+    <section class="hero section-pad">
+      <div class="container narrow center">
+        <h1>SEVI: Safe Evidential Real-World Reinforcement Learning</h1>
+        <div class="authors">
+          <span>Shaekh Mohammad Shithil</span>
+          <span>Lantao Liu</span>
+        </div>
+        <p class="affiliation">Indiana University Bloomington</p>
+        <p class="venue">IEEE Robotics and Automation Letters (RA-L), 2026</p>
+
+        <div class="link-row" aria-label="Project links">
+          <a class="pill" href="static/pdfs/sevi_ral_2026.pdf" target="_blank" rel="noopener">Paper</a>
+          <a class="pill" href="#video">Video</a>
+          <span class="pill muted" title="Add the public repository URL when code is released">Code · coming soon</span>
+          <a class="pill" href="#bibtex">BibTeX</a>
+        </div>
+      </div>
+
+      <div class="container media-container hero-media">
+        <video autoplay muted loop playsinline preload="metadata" poster="static/images/teaser_poster.jpg" aria-label="SEVI real-world USB insertion teaser">
+          <source src="static/videos/sevi_teaser.mp4" type="video/mp4" />
+          Your browser does not support HTML5 video.
+        </video>
+        <p class="teaser-caption">
+          SEVI evaluates each proposed task action before execution and switches to recovery when the action is predicted to be unsafe or the safety estimate is insufficiently supported by evidence.
+        </p>
+      </div>
+    </section>
+
+    <section class="section-pad compact-top">
+      <div class="container text-container">
+        <h2>Abstract</h2>
+        <p>
+          Real-world reinforcement learning has enabled contact-rich manipulation tasks to be trained directly on physical robots, but unsafe interactions during online learning remain a key barrier to practical deployment. We propose <strong>Safe Evidential Real-World Reinforcement Learning (SEVI)</strong>, a framework for reliability-aware safety intervention during real-world policy learning. SEVI introduces an <strong>Evidential Safety Critic (ESC)</strong> that estimates both future constraint-violation risk and epistemic uncertainty in a single forward pass. During online learning, SEVI evaluates each task-policy action before execution; if the action is predicted to be unsafe or the prediction is insufficiently supported by evidence, SEVI overrides it with an offline-trained recovery policy that guides the robot toward a lower-risk region.
+        </p>
+        <p>
+          We evaluate SEVI on two simulated manipulation tasks and a real-world USB insertion task under in-distribution and distribution-shifted conditions. Across task-learning and safety-critic baselines, SEVI achieves the strongest trajectory-level safety prediction, the highest final task success, and the lowest unsafe-event counts while preserving low-latency execution-time filtering.
+        </p>
+      </div>
+    </section>
+
+    <section class="section-pad alt">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Real-World Safety Intervention</h2>
+          <p>
+            The safety gate uses predicted risk and epistemic uncertainty to decide when the task action should be replaced by recovery. Below are two qualitatively different recovery behaviors used in our USB insertion experiments.
+          </p>
+        </div>
+
+        <div class="video-grid">
+          <article class="video-card">
+            <video controls muted playsinline preload="metadata" poster="static/images/hit_poster.jpg">
+              <source src="static/videos/hit_and_recover.mp4" type="video/mp4" />
+            </video>
+            <div class="card-copy">
+              <h3>Hit-and-Recover</h3>
+              <p>The task action enters a risky region, recovery is triggered, and the robot moves back toward a safer configuration before task execution resumes.</p>
+            </div>
+          </article>
+
+          <article class="video-card">
+            <video controls muted playsinline preload="metadata" poster="static/images/stuck_poster.jpg">
+              <source src="static/videos/stuck_and_recover.mp4" type="video/mp4" />
+            </video>
+            <div class="card-copy">
+              <h3>Stuck-and-Recover</h3>
+              <p>A distinct recovery response is used when the task becomes stuck near a failure boundary, testing whether uncertainty-aware gating is robust to the recovery behavior.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-pad">
+      <div class="container">
+        <div class="section-heading">
+          <h2>SEVI Framework</h2>
+          <p>
+            SEVI decouples task learning from execution-time safety intervention. Offline data train the Evidential Safety Critic and recovery policy; online, the task policy continues learning with standard off-policy RL while the safety layer only changes the action that is actually executed.
+          </p>
+        </div>
+
+        <figure class="figure-wide">
+          <img src="static/images/sevi_method.png" alt="Overview of the SEVI framework with offline training, runtime safety filtering, and online reinforcement learning." />
+        </figure>
+
+        <div class="three-col">
+          <div class="idea-card">
+            <div class="eyebrow">1 · Task</div>
+            <h3>Task Policy</h3>
+            <p>Proposes the action that optimizes the original manipulation objective using sample-efficient off-policy RL.</p>
+          </div>
+          <div class="idea-card highlight-blue">
+            <div class="eyebrow">2 · Assess</div>
+            <h3>Evidential Safety Critic</h3>
+            <p>Predicts future violation risk and epistemic uncertainty in one forward pass, providing both a safety estimate and a measure of its reliability.</p>
+          </div>
+          <div class="idea-card highlight-green">
+            <div class="eyebrow">3 · Recover</div>
+            <h3>Recovery Policy</h3>
+            <p>Overrides the task action when risk or uncertainty exceeds its threshold and guides the robot toward a lower-risk region.</p>
+          </div>
+        </div>
+
+        <div class="gate-box" aria-label="SEVI gating rule">
+          <div>
+            <span class="gate-dot safe"></span>
+            <strong>Low risk + low uncertainty</strong>
+            <span>Execute task action</span>
+          </div>
+          <div>
+            <span class="gate-dot risk"></span>
+            <strong>High predicted risk</strong>
+            <span>Trigger recovery</span>
+          </div>
+          <div>
+            <span class="gate-dot uncertain"></span>
+            <strong>High epistemic uncertainty</strong>
+            <span>Trigger recovery</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-pad alt">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Why Epistemic Uncertainty Matters</h2>
+          <p>
+            The evidential critic should become more certain where it has more training support, while remaining cautious in poorly supported regions. SEVI uses this reliability signal together with predicted risk for recovery gating.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure class="paper-figure">
+            <img src="static/images/uncertainty_characterization.png" alt="Epistemic uncertainty under increasing training coverage and safety-critic detection efficiency." />
+            <figcaption>Epistemic uncertainty decreases as training coverage increases; SEVI retains low-latency detection without repeated stochastic inference.</figcaption>
+          </figure>
+          <figure class="paper-figure">
+            <img src="static/images/gating_ablation.png" alt="Ablation comparing risk-only, uncertainty-only, and risk-plus-uncertainty recovery gating." />
+            <figcaption>Combining risk and uncertainty gives the strongest safety–performance trade-off across the three evaluated tasks.</figcaption>
+          </figure>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat">
+            <div class="stat-value">0.94</div>
+            <div class="stat-label">USB OOD uncertainty AUROC</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">2.60 ms</div>
+            <div class="stat-label">Hardware safety-critic latency</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">23.5%</div>
+            <div class="stat-label">Fewer unsafe events vs. risk-only gating, aggregated across tasks</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-pad">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Safe Online Policy Learning</h2>
+          <p>
+            On the real-world USB insertion task, SEVI improves task success while intervention rate and cycle time decrease as the policy learns. Closed-loop evaluation measures the final task policy separately from the safety cost accumulated during online training.
+          </p>
+        </div>
+
+        <figure class="figure-medium">
+          <img src="static/images/learning_curves.png" alt="Representative USB insertion learning curves for SQRL and SEVI." />
+          <figcaption>Representative hardware training run: success rate, intervention rate, and cycle time for SQRL and SEVI.</figcaption>
+        </figure>
+
+        <div class="result-callout">
+          <div>
+            <span class="big-number">0.83</span>
+            <span class="small-label">USB final success</span>
+          </div>
+          <div class="divider"></div>
+          <div>
+            <span class="big-number">15</span>
+            <span class="small-label">USB unsafe events</span>
+          </div>
+          <div class="divider"></div>
+          <div>
+            <span class="big-number">57.1%</span>
+            <span class="small-label">fewer USB unsafe events than SQRL</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-pad alt">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Closed-Loop Results</h2>
+          <p>SEVI achieves the highest final success rate and the lowest unsafe-event count on Block Plucking, Transport Nut, and real-world USB Insertion.</p>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th rowspan="2">Method</th>
+                <th colspan="2">Block Plucking</th>
+                <th colspan="2">Transport Nut</th>
+                <th colspan="2">USB Insertion</th>
+              </tr>
+              <tr>
+                <th>Success ↑</th><th>Unsafe ↓</th>
+                <th>Success ↑</th><th>Unsafe ↓</th>
+                <th>Success ↑</th><th>Unsafe ↓</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>SERL</td><td>0.67</td><td>270</td><td>0.52</td><td>450</td><td>0.71</td><td>56</td></tr>
+              <tr><td>SAC</td><td>0.63</td><td>298</td><td>0.49</td><td>467</td><td>0.61</td><td>49</td></tr>
+              <tr><td>SAC-C</td><td>0.71</td><td>281</td><td>0.55</td><td>410</td><td>0.70</td><td>37</td></tr>
+              <tr><td>SQRL</td><td>0.75</td><td>220</td><td>0.61</td><td>358</td><td>0.68</td><td>35</td></tr>
+              <tr><td>SEVI w/o Uncertainty</td><td>0.77</td><td>234</td><td>0.63</td><td>360</td><td>0.66</td><td>32</td></tr>
+              <tr class="ours"><td><strong>SEVI</strong></td><td><strong>0.81</strong></td><td><strong>154</strong></td><td><strong>0.67</strong></td><td><strong>310</strong></td><td><strong>0.83</strong></td><td><strong>15</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="small-note">Success is evaluated using the final policy; unsafe events are counted throughout training.</p>
+      </div>
+    </section>
+
+    <section class="section-pad">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Robustness to Recovery Behavior</h2>
+          <p>
+            The benefit of uncertainty-aware gating is not tied to one particular recovery response. On USB Insertion, risk-plus-uncertainty gating improves success and reduces unsafe events for both recovery behaviors.
+          </p>
+        </div>
+
+        <div class="recovery-results">
+          <div class="mini-table">
+            <h3>Hit-and-Recover</h3>
+            <div class="mini-row"><span>Risk only</span><span>0.64 success · 32 unsafe</span></div>
+            <div class="mini-row strong"><span>Risk + Uncertainty</span><span>0.82 success · 16 unsafe</span></div>
+          </div>
+          <div class="mini-table">
+            <h3>Stuck-and-Recover</h3>
+            <div class="mini-row"><span>Risk only</span><span>0.64 success · 33 unsafe</span></div>
+            <div class="mini-row strong"><span>Risk + Uncertainty</span><span>0.83 success · 15 unsafe</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="video" class="section-pad alt">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Video</h2>
+          <p>Full project video and additional recovery / data-coverage experiments.</p>
+        </div>
+
+        <div class="video-grid full-video-grid">
+          <article class="video-card">
+            <video controls playsinline preload="metadata" poster="static/images/teaser_poster.jpg">
+              <source src="static/videos/sevi_full_video.mp4" type="video/mp4" />
+            </video>
+            <div class="card-copy"><h3>SEVI Project Video</h3></div>
+          </article>
+          <article class="video-card">
+            <video controls playsinline preload="metadata" poster="static/images/hit_poster.jpg">
+              <source src="static/videos/sevi_additional_experiments.mp4" type="video/mp4" />
+            </video>
+            <div class="card-copy"><h3>Additional Experiments</h3></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="bibtex" class="section-pad">
+      <div class="container text-container">
+        <h2>BibTeX</h2>
+        <div class="bibtex-box">
+          <button id="copyBibtex" type="button">Copy</button>
+          <pre><code id="bibtexCode">@article{shithil2026sevi,
+  title   = {SEVI: Safe Evidential Real-World Reinforcement Learning},
+  author  = {Shithil, Shaekh Mohammad and Liu, Lantao},
+  journal = {IEEE Robotics and Automation Letters},
+  year    = {2026}
+}</code></pre>
+        </div>
+        <p class="small-note">Volume, issue, pages, and DOI can be added here once the final IEEE record is available.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container center">
+      <p>SEVI · Indiana University Bloomington · IEEE RA-L 2026</p>
+      <p class="template-note">Project-page style inspired by HumanUP / Nerfies.</p>
+    </div>
+  </footer>
+
+  <script src="static/js/main.js"></script>
+</body>
+</html>
